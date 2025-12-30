@@ -15,6 +15,7 @@
 #define HIDRAW_DEVICE "/dev/hidraw0"
 #define REPORT_ID 0x03
 
+// unused, but doesnt affect output. "documentation," i guess
 #define KEY_G1  0x00000001
 #define KEY_G2  0x00000002
 #define KEY_G3  0x00000004
@@ -49,7 +50,7 @@ unsigned int state;
 
 struct uinput_user_dev uinput_device;
 
-const unsigned short mapping[24] = {
+unsigned short mapping[24] = {
     KEY_F1,  KEY_F2,  KEY_F3,
     KEY_F4,  KEY_F5,  KEY_F6,
 
@@ -192,9 +193,70 @@ void write_state(int fd) {
     }
 }
 
+void load_mapping() {
+    const char *keys[24] = {
+        "G1",  "G2",  "G3",
+        "G4",  "G5",  "G6",
+
+        "G7",  "G8",  "G9",
+        "G10", "G11", "G12",
+
+        "G13", "G14", "G15",
+        "G16", "G17", "G18",
+
+        "BRIGHTNESS", "SUPER_LOCK",
+
+        "MR", "M1", "M2", "M3"
+    };
+
+    char path[256];
+
+    const char* home = getenv("HOME");
+    if (home == NULL) {
+        printf("$HOME not set, using default mapping");
+        return;
+    };
+
+    snprintf(path, sizeof(path), "%s/%s", home, ".config/k95aux/mapping");
+    FILE *f = fopen(path, "r");
+    if (f == NULL) {
+        printf("mapping file does not exist, using default mapping");
+        return;
+    };
+
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        char key[256];
+        unsigned short code;
+        if (sscanf(line, "%s %hu", key, &code) < 2) {
+            continue;
+        }
+
+        printf("key: %s, code: %d\n", key, code);
+
+        for (int i = 0; i < sizeof(keys); i++) {
+            if (strcmp(key, keys[i]) == 0) {
+                mapping[i] = code;
+                break;
+            }
+        }
+
+        // invalid key names just ignored
+    }
+
+    fclose(f);
+}
+
 int main(int argc, char **argv) {
-    printf("opening %s\n", HIDRAW_DEVICE);
-    int hid_fd = open(HIDRAW_DEVICE, O_RDONLY);
+    char *device = HIDRAW_DEVICE;
+    if (argc > 1) {
+        device = argv[1];
+    }
+
+    load_mapping();
+
+    printf("opening %s\n", device);
+    int hid_fd = open(device, O_RDONLY);
     if (hid_fd < 0) {
         fatal("failed to open hid device");
     }
