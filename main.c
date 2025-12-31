@@ -233,8 +233,6 @@ void load_mapping() {
             continue;
         }
 
-        printf("key: %s, code: %d\n", key, code);
-
         for (int i = 0; i < sizeof(keys); i++) {
             if (strcmp(key, keys[i]) == 0) {
                 mapping[i] = code;
