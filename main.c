@@ -171,6 +171,7 @@ void write_state(int fd) {
 
     for (int i = 0; i < 24; i++) {
         unsigned short code = mapping[i];
+        if (code == 0) continue;
 
         bool pressed = ((state >> i) & 1) && !((old_state >> i) & 1);
         bool released = ((old_state >> i) & 1) && !((state >> i) & 1);
