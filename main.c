@@ -139,59 +139,43 @@ void create_uinput_device(int fd) {
     }
 }
 
-void press_event(struct input_event *event, unsigned short code) {
+void clear_event(struct input_event *event) {
     memset(event, 0, sizeof(event));
     gettimeofday(&(event->time), NULL);
-
-    event->type = EV_KEY;
-    event->code = code;
-    event->value = 1;
-}
-
-void release_event(struct input_event *event, unsigned short code) {
-    memset(event, 0, sizeof(event));
-    gettimeofday(&(event->time), NULL);
-
-    event->type = EV_KEY;
-    event->code = code;
-    event->value = 0;
-}
-
-void syn_event(struct input_event *event) {
-    memset(event, 0, sizeof(event));
-    gettimeofday(&(event->time), NULL);
-
-    event->type = EV_SYN;
-    event->code = SYN_REPORT;
-    event->value = 0;
 }
 
 void write_state(int fd) {
     struct input_event event;
 
+    bool dirty = false;
     for (int i = 0; i < 24; i++) {
         unsigned short code = mapping[i];
         if (code == 0) continue;
 
         bool pressed = ((state >> i) & 1) && !((old_state >> i) & 1);
         bool released = ((old_state >> i) & 1) && !((state >> i) & 1);
+        if (!pressed && !released) continue;
 
-        if (pressed) {
-            press_event(&event, code);
-            if (write(fd, &event, sizeof(event)) < 0) {
-                fatal("failed to write uinput press event");
-            }
-        } else if (released) {
-            release_event(&event, code);
-            if (write(fd, &event, sizeof(event)) < 0) {
-                fatal("failed to write uinput release event");
-            }
+        clear_event(&event);
+        event.type = EV_KEY;
+        event.code = code;
+        event.value = pressed ? 1 : 0;
+
+        if (write(fd, &event, sizeof(event)) < 0) {
+            fatal("failed to write uinput press/release event");
         }
+
+        dirty = true;
     }
 
-    syn_event(&event);
-    if (write(fd, &event, sizeof(event)) < 0) {
-        fatal("failed to write uinput syn event");
+    if (dirty) {
+        clear_event(&event);
+        event.type = EV_SYN;
+        event.code = SYN_REPORT;
+
+        if (write(fd, &event, sizeof(event)) < 0) {
+            fatal("failed to write uinput syn event");
+        }
     }
 }
 
