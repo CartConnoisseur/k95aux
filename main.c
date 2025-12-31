@@ -45,6 +45,8 @@
 #define KEY_M2 0x00400000
 #define KEY_M3 0x00800000
 
+bool locked = false;
+
 unsigned int old_state;
 unsigned int state;
 
@@ -257,7 +259,8 @@ int main(int argc, char **argv) {
 
     while (1) {
         read_report(hid_fd);
-        write_state(uinput_fd);
+        if (state & KEY_MR) locked = !locked;
+        if (!locked) write_state(uinput_fd);
     }
 
     close(hid_fd);
