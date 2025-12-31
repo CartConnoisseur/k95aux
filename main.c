@@ -65,6 +65,28 @@ unsigned short mapping[24] = {
     KEY_F21, KEY_F22, KEY_F23, KEY_F24
 };
 
+// also unused
+void _debug_print_state() {
+    printf("\n--------\n");
+    printf("%d %d %d\n", (state & KEY_G1)  > 0, (state & KEY_G2)  > 0, (state & KEY_G3)  > 0);
+    printf("%d %d %d\n", (state & KEY_G4)  > 0, (state & KEY_G5)  > 0, (state & KEY_G6)  > 0);
+    printf("\n");
+    printf("%d %d %d\n", (state & KEY_G7)  > 0, (state & KEY_G8)  > 0, (state & KEY_G9)  > 0);
+    printf("%d %d %d\n", (state & KEY_G10) > 0, (state & KEY_G11) > 0, (state & KEY_G12) > 0);
+    printf("\n");
+    printf("%d %d %d\n", (state & KEY_G13) > 0, (state & KEY_G14) > 0, (state & KEY_G15) > 0);
+    printf("%d %d %d\n", (state & KEY_G16) > 0, (state & KEY_G17) > 0, (state & KEY_G18) > 0);
+    printf("\n");
+
+    printf("%d %d %d %d", (state & KEY_MR) > 0, (state & KEY_M1) > 0, (state & KEY_M2) > 0, (state & KEY_M3) > 0);
+    printf(" | ");
+    printf("%d %d", (state & KEY_BRIGHTNESS) > 0, (state & KEY_SUPER_LOCK) > 0);
+    printf("\n");
+
+    printf("\n%06x\n", state);
+    printf("--------\n");
+}
+
 void read_report(int fd) {
     unsigned char buf[64];
     int n = read(fd, buf, sizeof(buf));
@@ -88,27 +110,6 @@ void read_report(int fd) {
             state |= (buf[17] & 0xf0) << 16;
         }
     }
-}
-
-void _debug_print_state() {
-    printf("\n--------\n");
-    printf("%d %d %d\n", (state & KEY_G1)  > 0, (state & KEY_G2)  > 0, (state & KEY_G3)  > 0);
-    printf("%d %d %d\n", (state & KEY_G4)  > 0, (state & KEY_G5)  > 0, (state & KEY_G6)  > 0);
-    printf("\n");
-    printf("%d %d %d\n", (state & KEY_G7)  > 0, (state & KEY_G8)  > 0, (state & KEY_G9)  > 0);
-    printf("%d %d %d\n", (state & KEY_G10) > 0, (state & KEY_G11) > 0, (state & KEY_G12) > 0);
-    printf("\n");
-    printf("%d %d %d\n", (state & KEY_G13) > 0, (state & KEY_G14) > 0, (state & KEY_G15) > 0);
-    printf("%d %d %d\n", (state & KEY_G16) > 0, (state & KEY_G17) > 0, (state & KEY_G18) > 0);
-    printf("\n");
-
-    printf("%d %d %d %d", (state & KEY_MR) > 0, (state & KEY_M1) > 0, (state & KEY_M2) > 0, (state & KEY_M3) > 0);
-    printf(" | ");
-    printf("%d %d", (state & KEY_BRIGHTNESS) > 0, (state & KEY_SUPER_LOCK) > 0);
-    printf("\n");
-
-    printf("\n%06x\n", state);
-    printf("--------\n");
 }
 
 void create_uinput_device(int fd) {
@@ -270,7 +271,6 @@ int main(int argc, char **argv) {
     create_uinput_device(uinput_fd);
 
     while (1) {
-        _debug_print_state();
         read_report(hid_fd);
         write_state(uinput_fd);
     }
