@@ -2,7 +2,7 @@
 
 stdenv.mkDerivation {
   pname = "k95aux";
-  version = "0.1.0";
+  version = "1.0.0";
 
   src = ./main.c;
   dontUnpack = true;
