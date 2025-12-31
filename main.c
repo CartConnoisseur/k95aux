@@ -210,15 +210,17 @@ void load_mapping() {
         "MR", "M1", "M2", "M3"
     };
 
-    char path[256];
+    char path[256] = "/etc/k95aux/mapping";
+    if (geteuid() != 0) {
+        const char* home = getenv("HOME");
+        if (home == NULL) {
+            printf("$HOME not set, using default mapping");
+            return;
+        };
 
-    const char* home = getenv("HOME");
-    if (home == NULL) {
-        printf("$HOME not set, using default mapping");
-        return;
-    };
+        snprintf(path, sizeof(path), "%s/%s", home, ".config/k95aux/mapping");
+    }
 
-    snprintf(path, sizeof(path), "%s/%s", home, ".config/k95aux/mapping");
     FILE *f = fopen(path, "r");
     if (f == NULL) {
         printf("mapping file does not exist, using default mapping");
