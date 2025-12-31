@@ -7,12 +7,13 @@
 #include <linux/uinput.h>
 #include <sys/time.h>
 #include <stdbool.h>
+#include <dirent.h>
 
 #define fatal(str) perror(str); exit(1);
 
 #define UINPUT_DEVICE_NAME "Auxillary Corsair K95 Key Input"
 
-#define HIDRAW_DEVICE "/dev/hidraw0"
+#define HID_DEVICE_ID "1B1C:1B11.0002"
 #define REPORT_ID 0x03
 
 // unused, but doesnt affect output. "documentation," i guess
@@ -235,8 +236,38 @@ void load_mapping() {
     fclose(f);
 }
 
+void find_hidraw(char buf[]) {
+    DIR *d = opendir("/sys/class/hidraw");
+    if (d == NULL) {
+        fatal("failed to iterate /sys/class/hidraw")
+    }
+
+    struct dirent *entry;
+    char path[256];
+    char device[256];
+
+    while ((entry = readdir(d)) != NULL) {
+        if (entry->d_type != DT_LNK) continue;
+
+        snprintf(path, sizeof(path), "/sys/class/hidraw/%s/device", entry->d_name);
+        if (readlink(path, device, sizeof(device)) < 0) {
+            fatal("failed to read /sys/class/hidraw/hidrawX/device")
+        }
+
+        if (strcmp(&device[14], HID_DEVICE_ID) == 0) {
+            snprintf(buf, sizeof(path), "/dev/%s", entry->d_name);
+            break;
+        }
+    }
+
+    closedir(d);
+} 
+
 int main(int argc, char **argv) {
-    char *device = HIDRAW_DEVICE;
+    char buf[256];
+    find_hidraw(buf);
+
+    char *device = buf;
     if (argc > 1) {
         device = argv[1];
     }
