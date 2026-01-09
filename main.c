@@ -13,7 +13,7 @@
 
 #define UINPUT_DEVICE_NAME "Auxillary Corsair K95 Key Input"
 
-#define HID_DEVICE_ID "1B1C:1B11.0002"
+#define HID_DEVICE_ID "1B1C:1B11"
 #define REPORT_ID 0x03
 
 // unused, but doesnt affect output. "documentation," i guess
@@ -254,6 +254,8 @@ void find_hidraw(char buf[]) {
             fatal("failed to read /sys/class/hidraw/hidrawX/device")
         }
 
+        device[23] = 0;
+        
         if (strcmp(&device[14], HID_DEVICE_ID) == 0) {
             snprintf(buf, sizeof(path), "/dev/%s", entry->d_name);
             break;
